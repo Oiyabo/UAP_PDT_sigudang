@@ -3,7 +3,7 @@ Proyek ini merupakan sistem inventaris dan manajemen gudang sederhana yang diban
 
 <h1>📌 Detail Konsep</h1>
 
-<img src="https://via.placeholder.com/800x400.png?text=Dashboard+Si-Gudang" alt="Dashboard" />
+<img src="dashbord.png" alt="Dashboard" />
 
 ## ⚙️ Trigger
 Trigger ini bertujuan untuk menjaga konsistensi jumlah stok di tabel `stok_cabang` secara real-time setiap kali ada rekaman baru yang masuk di tabel `transaksi`.
