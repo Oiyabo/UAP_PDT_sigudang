@@ -1,8 +1,15 @@
 {
-    "auto_backup_enabled": true,
-    "last_backup": null,
+    "auto_backup_enabled": false,
+    "last_backup": {
+        "timestamp": "2026-06-05_21-37-51",
+        "file": "backup_2026-06-05_21-37-51.sql",
+        "size": 23770,
+        "size_formatted": "23.21 KB",
+        "status": "success",
+        "created_at": "2026-06-05 21:37:51"
+    },
     "backup_interval": 180,
     "created_at": "2026-06-05 20:57:05",
     "started_at": "2026-06-05 21:31:46",
-    "stopped_at": "2026-06-05 21:22:10"
+    "stopped_at": "2026-06-05 21:38:11"
 }

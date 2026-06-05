@@ -61,59 +61,44 @@ WHERE jenis_transaksi = 'masuk';
 
 ## 💾 Backup Otomatis & Task Scheduler
 
-Untuk menjaga ketersediaan dan keamanan data, sistem ini dilengkapi fitur backup otomatis menggunakan `mysqldump` yang dapat diintegrasikan dengan *Task Scheduler* di Windows. Backup akan otomatis menyimpan file SQL dengan nama yang mencakup *timestamp*, dan sistem akan otomatis membersihkan file backup yang lebih tua dari 30 hari.
+Sistem ini dilengkapi backup otomatis menggunakan `mysqldump` yang dijalankan melalui Windows Task Scheduler setiap 3 menit. File backup otomatis dihapus setelah 30 hari.
 
-### 📄 auto_backup.php
+### 🔧 Setup Awal - Variable yang Harus Diubah
 
+Sebelum menjalankan setup, pastikan variable di file berikut sudah sesuai:
+
+#### 1. **auto_backup.php**
 ```php
-<?php
-date_default_timezone_set('Asia/Jakarta');
-
-if (php_sapi_name() !== 'cli') {
-    http_response_code(403);
-    die("Script ini hanya dapat dijalankan dari Command Line");
-}
-
-require_once __DIR__ . '/config/koneksi.php';
-
-$mysqldumpPath = "C:\\laragon\\bin\\mysql\\mysql-8.0.30-winx64\\bin\\mysqldump.exe";
+$mysqldumpPath = "C:\\laragon\\bin\\mysql\\mysql-8.0.30-winx64\\bin\\mysqldump.exe";  // ← Path mysqldump
 $host = "localhost";
-$user = "root";
-$pass = "";
-$db = "db_gudang";
-
-$backupDir = __DIR__ . "\\backup\\";
-if (!is_dir($backupDir)) {
-    mkdir($backupDir, 0777, true);
-}
-
-$timestamp = date('Y-m-d_H-i-s');
-$nama_file = $backupDir . "backup_" . $timestamp . ".sql";
-$command = "\"$mysqldumpPath\" -h $host -u $user $db > \"$nama_file\"";
-
-echo "[" . date('Y-m-d H:i:s') . "] Memulai backup database...\n";
-
-// Eksekusi mysqldump
-exec($command, $output, $return_var);
-
-if ($return_var === 0) {
-    echo "[" . date('Y-m-d H:i:s') . "] ✓ Backup Berhasil!\n";
-    echo "  Lokasi: " . $nama_file . "\n";
-    
-    // Auto cleanup backup lama (30 hari)
-    cleanOldBackups($backupDir, 30);
-    exit(0);
-} else {
-    echo "[" . date('Y-m-d H:i:s') . "] ✗ Backup Gagal!\n";
-    exit(1);
-}
-
-function cleanOldBackups($backupDir, $days = 30) {
-    // ... logic penghapusan file lama
-}
-?>
+$user = "root";           // ← User MySQL
+$pass = "";               // ← Password MySQL
+$db = "db_gudang";        // ← Nama database
 ```
 
-Untuk menjadwalkan ini, admin hanya perlu membuat *Task* di **Windows Task Scheduler** yang mengeksekusi PHP CLI:
-`C:\laragon\bin\php\php-8.1.10\php.exe d:\laragon\www\UAP_PDT_sigudang\auto_backup.php`
-secara otomatis (misalnya setiap hari jam 12 malam).
+#### 2. **setup_scheduler.ps1**
+```powershell
+[string]$projectPath = "C:\laragon\www\UTP_PDT_sigudang"    # ← Path project Anda
+[string]$phpPath = "C:\laragon\bin\php\php-8.1.10-Win32-vs16-x64\php.exe"  # ← Path PHP CLI
+[int]$intervalMinutes = 3  # ← Interval backup (dalam menit)
+```
+
+### ▶️ Cara Setup Task Scheduler
+
+1. **Buka PowerShell sebagai Administrator**
+2. **Jalankan script setup:**
+   ```powershell
+   powershell -ExecutionPolicy Bypass -File "C:\laragon\www\UTP_PDT_sigudang\setup_scheduler.ps1"
+   ```
+3. **Konfigurasi selesai!** Task akan berjalan otomatis setiap 3 menit
+
+### 📋 File Penting
+- **auto_backup.php** - Script backup CLI (dijalankan Task Scheduler)
+- **backup_status.json** - Status auto backup (enable/disable)
+- **backup/** - Folder penyimpanan file backup
+- **setup_scheduler.ps1** - Setup Task Scheduler Windows
+
+### ⚙️ Mengontrol Auto Backup
+- **Start:** Buka halaman backup → Klik "Mulai Backup Otomatis"
+- **Stop:** Buka halaman backup → Klik "Stop Backup Otomatis"
+- **Manual Backup:** Klik tombol "Buat Backup Sekarang"
