@@ -26,12 +26,18 @@ if (isset($_POST['buat_backup'])) {
     exec($command, $output, $return_var);
     
     if ($return_var === 0) {
-        $pesan = "✓ Backup berhasil dibuat! File: " . basename($nama_file);
-        $tipe_pesan = "success";
+        // Redirect ke GET request untuk menghindari POST resubmit saat refresh
+        header('Location: backup.php?backup_success=' . urlencode(basename($nama_file)));
+        exit;
     } else {
         $pesan = "✗ Backup gagal! Pastikan mysqldump terinstall di sistem Anda.";
         $tipe_pesan = "danger";
     }
+}
+
+if (isset($_GET['backup_success'])) {
+    $pesan = "✓ Backup berhasil dibuat! File: " . htmlspecialchars($_GET['backup_success']);
+    $tipe_pesan = "success";
 }
 
 if (isset($_GET['download'])) {
