@@ -12,46 +12,31 @@ if (isset($_POST['simpan_transaksi'])) {
     $asal_id = !empty($_POST['cabang_asal']) ? (int)$_POST['cabang_asal'] : 'NULL';
     $tujuan_id = !empty($_POST['cabang_tujuan']) ? (int)$_POST['cabang_tujuan'] : 'NULL';
 
-    mysqli_query($conn, "START TRANSACTION"); 
-    
     try {
         if ($jenis == 'mutasi') {
             if ($asal_id == 'NULL' || $tujuan_id == 'NULL') throw new Exception("Cabang Asal dan Tujuan wajib diisi untuk mutasi.");
             if ($asal_id == $tujuan_id) throw new Exception("Cabang Asal dan Tujuan tidak boleh sama.");
-            
-            $min_id = min($asal_id, $tujuan_id);
-            $max_id = max($asal_id, $tujuan_id);
-            mysqli_query($conn, "SELECT stok FROM stok_cabang WHERE barang_id = $barang_id AND cabang_id = $min_id FOR UPDATE");
-            mysqli_query($conn, "SELECT stok FROM stok_cabang WHERE barang_id = $barang_id AND cabang_id = $max_id FOR UPDATE");
-            
-            $cek = mysqli_query($conn, "SELECT stok FROM stok_cabang WHERE barang_id = $barang_id AND cabang_id = $asal_id");
-            $stok_asal = ($r = mysqli_fetch_assoc($cek)) ? $r['stok'] : 0;
-            if ($stok_asal < $jumlah) throw new Exception("Stok di Cabang Asal tidak mencukupi.");
-            
         } elseif ($jenis == 'keluar') {
             if ($asal_id == 'NULL') throw new Exception("Cabang Asal wajib diisi.");
             $tujuan_id = 'NULL';
-            mysqli_query($conn, "SELECT stok FROM stok_cabang WHERE barang_id = $barang_id AND cabang_id = $asal_id FOR UPDATE");
-            $cek = mysqli_query($conn, "SELECT stok FROM stok_cabang WHERE barang_id = $barang_id AND cabang_id = $asal_id");
-            $stok_asal = ($r = mysqli_fetch_assoc($cek)) ? $r['stok'] : 0;
-            if ($stok_asal < $jumlah) throw new Exception("Stok tidak mencukupi.");
-            
         } elseif ($jenis == 'masuk') {
             if ($tujuan_id == 'NULL') throw new Exception("Cabang Tujuan wajib diisi.");
             $asal_id = 'NULL';
-            mysqli_query($conn, "SELECT stok FROM stok_cabang WHERE barang_id = $barang_id AND cabang_id = $tujuan_id FOR UPDATE");
         }
 
-        $simpan = mysqli_query($conn, "INSERT INTO transaksi (barang_id, jenis_transaksi, jumlah, cabang_asal_id, cabang_tujuan_id) VALUES ($barang_id, '$jenis', $jumlah, $asal_id, $tujuan_id)");
+        // Memanggil Stored Procedure yang ada di Database
+        $query_call = "CALL CatatTransaksi($barang_id, '$jenis', $jumlah, $asal_id, $tujuan_id)";
+        $eksekusi = mysqli_query($conn, $query_call);
         
-        if ($simpan) {
-            mysqli_query($conn, "COMMIT");
-            $pesan = "<div class='alert alert-success mt-3'>Transaksi berhasil (Committed)! Stok diperbarui.</div>";
-        } else { throw new Exception("Gagal simpan transaksi: " . mysqli_error($conn)); }
+        if ($eksekusi) {
+            $pesan = "<div class='alert alert-success mt-3'>Transaksi berhasil (via Procedure)! Stok otomatis diperbarui.</div>";
+        } else {
+            // Error dari SIGNAL SQLSTATE 45000 akan ditangkap di sini
+            throw new Exception("Gagal simpan transaksi: " . mysqli_error($conn));
+        }
         
     } catch (Exception $e) {
-        mysqli_query($conn, "ROLLBACK");
-        $pesan = "<div class='alert alert-danger mt-3'>Transaksi dibatalkan (Rollback): " . $e->getMessage() . "</div>";
+        $pesan = "<div class='alert alert-danger mt-3'>Transaksi dibatalkan: " . $e->getMessage() . "</div>";
     }
 }
 
