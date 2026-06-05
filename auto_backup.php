@@ -22,6 +22,15 @@ if (!is_dir($backupDir)) {
 
 $statusFile = __DIR__ . "\\backup_status.json";
 
+// CEK APAKAH AUTO BACKUP DIAKTIFKAN
+if (file_exists($statusFile)) {
+    $status = json_decode(file_get_contents($statusFile), true);
+    if (!($status['auto_backup_enabled'] ?? false)) {
+        echo "[" . date('Y-m-d H:i:s') . "] Auto backup dinonaktifkan, skip backup.\n";
+        exit(0);
+    }
+}
+
 $timestamp = date('Y-m-d_H-i-s');
 $nama_file = $backupDir . "backup_" . $timestamp . ".sql";
 $command = "\"$mysqldumpPath\" -h $host -u $user $db > \"$nama_file\"";
