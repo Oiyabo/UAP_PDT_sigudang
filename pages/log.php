@@ -91,10 +91,10 @@ if (!function_exists('formatBytes')) {
                 <button class="nav-link active" id="transaksi-tab" data-bs-toggle="pill" data-bs-target="#transaksi" type="button" role="tab" aria-controls="transaksi" aria-selected="true"><i class="fa-solid fa-clock-rotate-left me-2"></i> Transaction Log</button>
             </li>
             <li class="nav-item" role="presentation">
-                <button class="nav-link" id="komparasi-tab" data-bs-toggle="pill" data-bs-target="#komparasi" type="button" role="tab" aria-controls="komparasi" aria-selected="false"><i class="fa-solid fa-layer-group me-2"></i> Set Operations (Data Komparasi)</button>
+                <button class="nav-link" id="komparasi-tab" data-bs-toggle="pill" data-bs-target="#komparasi" type="button" role="tab" aria-controls="komparasi" aria-selected="false"><i class="fa-solid fa-layer-group me-2"></i> Analisis Persebaran Stok</button>
             </li>
             <li class="nav-item" role="presentation">
-                <button class="nav-link" id="frag-tab" data-bs-toggle="pill" data-bs-target="#frag" type="button" role="tab" aria-controls="frag" aria-selected="false"><i class="fa-solid fa-table-columns me-2"></i> Data Fragmentation</button>
+                <button class="nav-link" id="frag-tab" data-bs-toggle="pill" data-bs-target="#frag" type="button" role="tab" aria-controls="frag" aria-selected="false"><i class="fa-solid fa-table-columns me-2"></i> Segmentasi Transaksi</button>
             </li>
         </ul>
 
@@ -135,20 +135,20 @@ if (!function_exists('formatBytes')) {
             <div class="tab-pane fade" id="komparasi" role="tabpanel" aria-labelledby="komparasi-tab">
                 <ul class="nav nav-tabs fw-bold mb-4" id="setOpsTab" role="tablist">
                     <li class="nav-item" role="presentation">
-                        <button class="nav-link active text-primary" id="union-tab" data-bs-toggle="tab" data-bs-target="#union" type="button" role="tab" aria-controls="union" aria-selected="true"><i class="fa-solid fa-layer-group me-2"></i> Gabungan Data</button>
+                        <button class="nav-link active text-primary" id="union-tab" data-bs-toggle="tab" data-bs-target="#union" type="button" role="tab" aria-controls="union" aria-selected="true"><i class="fa-solid fa-layer-group me-2"></i> Semua Ketersediaan (Pusat & Cabang)</button>
                     </li>
                     <li class="nav-item" role="presentation">
-                        <button class="nav-link text-success" id="intersect-tab" data-bs-toggle="tab" data-bs-target="#intersect" type="button" role="tab" aria-controls="intersect" aria-selected="false"><i class="fa-solid fa-check-double me-2"></i> Tersedia di Pusat & Cabang</button>
+                        <button class="nav-link text-success" id="intersect-tab" data-bs-toggle="tab" data-bs-target="#intersect" type="button" role="tab" aria-controls="intersect" aria-selected="false"><i class="fa-solid fa-check-double me-2"></i> Stok Terdistribusi</button>
                     </li>
                     <li class="nav-item" role="presentation">
-                        <button class="nav-link text-danger" id="except-tab" data-bs-toggle="tab" data-bs-target="#except" type="button" role="tab" aria-controls="except" aria-selected="false"><i class="fa-solid fa-not-equal me-2"></i> Selisih Data (Pusat Only)</button>
+                        <button class="nav-link text-danger" id="except-tab" data-bs-toggle="tab" data-bs-target="#except" type="button" role="tab" aria-controls="except" aria-selected="false"><i class="fa-solid fa-not-equal me-2"></i> Stok Eksklusif Pusat</button>
                     </li>
                 </ul>
 
                 <div class="tab-content" id="setOpsTabContent">
                     <div class="tab-pane fade show active" id="union" role="tabpanel" aria-labelledby="union-tab">
                         <div class="glass-card p-4">
-                            <h6 class="fw-bold mb-3 text-primary">Gabungan Seluruh Master Barang Aktif</h6>
+                            <h6 class="fw-bold mb-3 text-primary">Semua Ketersediaan Stok di Seluruh Gudang</h6>
                             <table class="table table-bordered table-hover">
                                 <thead class="table-light"><tr><th>Kode Barang</th><th>Nama Barang</th><th>Sumber Lokasi</th></tr></thead>
                                 <tbody>
@@ -161,7 +161,7 @@ if (!function_exists('formatBytes')) {
                     </div>
                     <div class="tab-pane fade" id="intersect" role="tabpanel" aria-labelledby="intersect-tab">
                         <div class="glass-card p-4">
-                            <h6 class="fw-bold mb-3 text-success">Barang Tersedia di Pusat & Cabang</h6>
+                            <h6 class="fw-bold mb-3 text-success">Barang yang Tersedia di Seluruh Gudang Pusat & Cabang</h6>
                             <table class="table table-bordered table-hover">
                                 <thead class="table-light"><tr><th>Kode Barang</th><th>Nama Barang</th></tr></thead>
                                 <tbody>
@@ -174,7 +174,7 @@ if (!function_exists('formatBytes')) {
                     </div>
                     <div class="tab-pane fade" id="except" role="tabpanel" aria-labelledby="except-tab">
                         <div class="glass-card p-4">
-                            <h6 class="fw-bold mb-3 text-danger">Barang Menumpuk di Gudang Pusat (Pusat Only)</h6>
+                            <h6 class="fw-bold mb-3 text-danger">Barang Eksklusif Hanya Tersedia di Gudang Pusat</h6>
                             <table class="table table-bordered table-hover">
                                 <thead class="table-light"><tr><th>Kode Barang</th><th>Nama Barang</th></tr></thead>
                                 <tbody>
@@ -192,20 +192,20 @@ if (!function_exists('formatBytes')) {
             <div class="tab-pane fade" id="frag" role="tabpanel" aria-labelledby="frag-tab">
                 <ul class="nav nav-tabs fw-bold mb-4" id="fragSubTab" role="tablist">
                     <li class="nav-item" role="presentation">
-                        <button class="nav-link active text-primary" id="horizontal-tab" data-bs-toggle="tab" data-bs-target="#horizontal" type="button" role="tab" aria-controls="horizontal" aria-selected="true"><i class="fa-solid fa-arrows-left-right me-2"></i> Horizontal</button>
+                        <button class="nav-link active text-primary" id="horizontal-tab" data-bs-toggle="tab" data-bs-target="#horizontal" type="button" role="tab" aria-controls="horizontal" aria-selected="true"><i class="fa-solid fa-filter me-2"></i> Filter: Transaksi Masuk</button>
                     </li>
                     <li class="nav-item" role="presentation">
-                        <button class="nav-link text-success" id="vertical-tab" data-bs-toggle="tab" data-bs-target="#vertical" type="button" role="tab" aria-controls="vertical" aria-selected="false"><i class="fa-solid fa-arrows-up-down me-2"></i> Vertikal</button>
+                        <button class="nav-link text-success" id="vertical-tab" data-bs-toggle="tab" data-bs-target="#vertical" type="button" role="tab" aria-controls="vertical" aria-selected="false"><i class="fa-solid fa-list-check me-2"></i> Ringkasan Kuantitas</button>
                     </li>
                     <li class="nav-item" role="presentation">
-                        <button class="nav-link text-warning" id="campuran-tab" data-bs-toggle="tab" data-bs-target="#campuran" type="button" role="tab" aria-controls="campuran" aria-selected="false"><i class="fa-solid fa-maximize me-2"></i> Campuran</button>
+                        <button class="nav-link text-warning" id="campuran-tab" data-bs-toggle="tab" data-bs-target="#campuran" type="button" role="tab" aria-controls="campuran" aria-selected="false"><i class="fa-solid fa-file-invoice me-2"></i> Rekap Spesifik</button>
                     </li>
                 </ul>
 
                 <div class="tab-content" id="fragSubTabContent">
                     <div class="tab-pane fade show active" id="horizontal" role="tabpanel" aria-labelledby="horizontal-tab">
                         <div class="glass-card p-4">
-                            <h6 class="fw-bold mb-3 text-primary">Fragmentasi Horizontal (Transaksi Masuk Saja)</h6>
+                            <h6 class="fw-bold mb-3 text-primary">Data Log Transaksi Masuk Saja</h6>
                             <table class="table table-bordered table-hover">
                                 <thead class="table-light"><tr><th>ID</th><th>Barang ID</th><th>Jenis</th><th>Jumlah</th><th>Tujuan</th><th>Tanggal</th></tr></thead>
                                 <tbody>
@@ -218,9 +218,9 @@ if (!function_exists('formatBytes')) {
                     </div>
                     <div class="tab-pane fade" id="vertical" role="tabpanel" aria-labelledby="vertical-tab">
                         <div class="glass-card p-4">
-                            <h6 class="fw-bold mb-3 text-success">Fragmentasi Vertikal (Detail Transaksi)</h6>
+                            <h6 class="fw-bold mb-3 text-success">Ringkasan Kuantitas Transaksi Keseluruhan</h6>
                             <table class="table table-bordered table-hover">
-                                <thead class="table-light"><tr><th>ID</th><th>Barang ID</th><th>Jumlah</th></tr></thead>
+                                <thead class="table-light"><tr><th>ID Transaksi</th><th>ID Barang</th><th>Kuantitas (Jumlah)</th></tr></thead>
                                 <tbody>
                                     <?php while($row = mysqli_fetch_assoc($frag_vertical)) : ?>
                                     <tr><td><?= $row['id']; ?></td><td><?= $row['barang_id']; ?></td><td><?= $row['jumlah']; ?></td></tr>
@@ -231,9 +231,9 @@ if (!function_exists('formatBytes')) {
                     </div>
                     <div class="tab-pane fade" id="campuran" role="tabpanel" aria-labelledby="campuran-tab">
                         <div class="glass-card p-4">
-                            <h6 class="fw-bold mb-3 text-warning">Fragmentasi Campuran (Ringkasan Transaksi Masuk)</h6>
+                            <h6 class="fw-bold mb-3 text-warning">Laporan Rekap Spesifik Transaksi Masuk</h6>
                             <table class="table table-bordered table-hover">
-                                <thead class="table-light"><tr><th>ID</th><th>Barang ID</th><th>Jumlah</th><th>Tanggal</th></tr></thead>
+                                <thead class="table-light"><tr><th>ID Transaksi</th><th>ID Barang</th><th>Jumlah</th><th>Tanggal</th></tr></thead>
                                 <tbody>
                                     <?php while($row = mysqli_fetch_assoc($frag_campuran)) : ?>
                                     <tr><td><?= $row['id']; ?></td><td><?= $row['barang_id']; ?></td><td><?= $row['jumlah']; ?></td><td><?= $row['tanggal']; ?></td></tr>
@@ -250,51 +250,5 @@ if (!function_exists('formatBytes')) {
     </div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-
-    const selectAll = document.getElementById('selectAllRows');
-    const rowCheckboxes = document.querySelectorAll('.row-checkbox');
-    if(selectAll) {
-        selectAll.addEventListener('change', function() {
-            rowCheckboxes.forEach(cb => cb.checked = selectAll.checked);
-        });
-        rowCheckboxes.forEach(cb => {
-            cb.addEventListener('change', function() {
-                if(!this.checked) selectAll.checked = false;
-                else if(document.querySelectorAll('.row-checkbox:checked').length === rowCheckboxes.length) selectAll.checked = true;
-            });
-        });
-    }
-
-
-    const colToggles = document.querySelectorAll('.col-toggle');
-    const table = document.getElementById('fragTable');
-    if(colToggles.length > 0 && table) {
-        colToggles.forEach(toggle => {
-            toggle.addEventListener('change', function() {
-                const colIndex = this.getAttribute('data-col');
-
-                const cells = table.querySelectorAll(`tr > :nth-child(${parseInt(colIndex) + 1})`);
-                cells.forEach(cell => {
-                    cell.style.display = this.checked ? '' : 'none';
-                });
-                
-
-                const footerLabel = document.getElementById('fragFooterLabel');
-                if(footerLabel) {
-                    let visibleCols = 2;
-                    document.querySelectorAll('.col-toggle:checked').forEach(t => {
-                        if (parseInt(t.getAttribute('data-col')) < 6) visibleCols++;
-                    });
-                    footerLabel.colSpan = visibleCols;
-                }
-            });
-
-            toggle.dispatchEvent(new Event('change'));
-        });
-    }
-});
-</script>
 </body>
 </html>
