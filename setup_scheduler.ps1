@@ -1,7 +1,7 @@
 param(
-    [string]$projectPath = "C:\laragon\www\UTP_PDT_sigudang",
-    [string]$phpPath = "C:\laragon\bin\php\php-8.1.10-Win32-vs16-x64\php.exe",
-    [int]$intervalMinutes = 3
+    [string]$projectPath = "D:\laragon\www\UTP_PDT_sigudang",
+    [string]$phpPath = "D:\laragon\bin\php\php-8.1.10-Win32-vs16-x64\php.exe",
+    [int]$intervalMinutes = 1
 )
 
 $scriptName = "auto_backup.php"

@@ -9,7 +9,7 @@ if (php_sapi_name() !== 'cli') {
 
 require_once __DIR__ . '/config/koneksi.php';
 
-$mysqldumpPath = "C:\\laragon\\bin\\mysql\\mysql-8.0.30-winx64\\bin\\mysqldump.exe";
+$mysqldumpPath = "D:\\laragon\\bin\\mysql\\mysql-8.0.30-winx64\\bin\\mysqldump.exe";
 $host = "localhost";
 $user = "root";
 $pass = "";

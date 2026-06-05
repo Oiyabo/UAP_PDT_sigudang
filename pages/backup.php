@@ -13,7 +13,7 @@ $pesan = "";
 $tipe_pesan = "";
 
 if (isset($_POST['buat_backup'])) {
-    $mysqldumpPath = "C:\\laragon\\bin\\mysql\\mysql-8.0.30-winx64\\bin\\mysqldump.exe";
+    $mysqldumpPath = "D:\\laragon\\bin\\mysql\\mysql-8.0.30-winx64\\bin\\mysqldump.exe";
     
     $host = "localhost";
     $user = "root";
