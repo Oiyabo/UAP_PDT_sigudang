@@ -23,92 +23,24 @@ $query_log = "
 $transaksi = mysqli_query($conn, $query_log);
 
 
-$query_utama = "SELECT DISTINCT b.kode_barang, b.nama_barang, 'Gudang Pusat' AS lokasi FROM stok_cabang sc JOIN barang b ON sc.barang_id = b.id WHERE sc.cabang_id = 1 AND sc.stok > 0";
-$result_utama = mysqli_query($conn, $query_utama);
-
-$query_cabang = "SELECT DISTINCT b.kode_barang, b.nama_barang, c.nama_cabang AS lokasi FROM stok_cabang sc JOIN barang b ON sc.barang_id = b.id JOIN cabang c ON sc.cabang_id = c.id WHERE sc.cabang_id != 1 AND sc.stok > 0";
-$result_cabang = mysqli_query($conn, $query_cabang);
-
+$query_union = "SELECT * FROM v_komparasi_union ORDER BY kode_barang ASC";
+$result_union = mysqli_query($conn, $query_union);
 $union_data = [];
-while($row = mysqli_fetch_assoc($result_utama)) { $union_data[] = $row; }
-while($row = mysqli_fetch_assoc($result_cabang)) { $union_data[] = $row; }
-usort($union_data, function($a, $b) { return strcmp($a['kode_barang'], $b['kode_barang']); });
+if($result_union) {
+    while($row = mysqli_fetch_assoc($result_union)) { $union_data[] = $row; }
+}
 
-$query_intersect = "
-    SELECT DISTINCT b.kode_barang, b.nama_barang 
-    FROM stok_cabang sc_pusat 
-    JOIN barang b ON sc_pusat.barang_id = b.id
-    WHERE sc_pusat.cabang_id = 1 AND sc_pusat.stok > 0
-    AND b.id IN (SELECT barang_id FROM stok_cabang WHERE cabang_id != 1 AND stok > 0)
-";
+$query_intersect = "SELECT * FROM v_komparasi_intersect ORDER BY kode_barang ASC";
 $result_intersect = mysqli_query($conn, $query_intersect);
 
-$query_except = "
-    SELECT DISTINCT b.kode_barang, b.nama_barang 
-    FROM stok_cabang sc_pusat 
-    JOIN barang b ON sc_pusat.barang_id = b.id
-    WHERE sc_pusat.cabang_id = 1 AND sc_pusat.stok > 0
-    AND b.id NOT IN (SELECT barang_id FROM stok_cabang WHERE cabang_id != 1 AND stok > 0)
-";
+$query_except = "SELECT * FROM v_komparasi_except ORDER BY kode_barang ASC";
 $result_except = mysqli_query($conn, $query_except);
 
 
 
-$pesan_frag = "";
-if ($_SESSION['role'] == 'Admin') {
-    if (isset($_POST['optimize_table'])) {
-        $table_name = preg_replace('/[^a-zA-Z0-9_]/', '', $_POST['table_name']);
-        if (!empty($table_name)) {
-            mysqli_query($conn, "OPTIMIZE TABLE $table_name");
-            $pesan_frag = "<div class='alert alert-success mt-3'><i class='fa-solid fa-check-circle me-2'></i>Tabel <strong>$table_name</strong> berhasil dioptimasi. Fragmentasi telah dibersihkan.</div>";
-        }
-    }
-
-    if (isset($_POST['optimize_all'])) {
-        $tables = [];
-        $res = mysqli_query($conn, "SHOW TABLES");
-        while ($row = mysqli_fetch_row($res)) {
-            $tables[] = $row[0];
-        }
-        if (count($tables) > 0) {
-            $table_list = implode(", ", $tables);
-            mysqli_query($conn, "OPTIMIZE TABLE $table_list");
-            $pesan_frag = "<div class='alert alert-success mt-3'><i class='fa-solid fa-check-circle me-2'></i>Seluruh tabel (".count($tables)." tabel) berhasil dioptimasi.</div>";
-        }
-    }
-
-    if (isset($_POST['optimize_selected'])) {
-        if (!empty($_POST['selected_tables'])) {
-            $safe_tables = [];
-            foreach ($_POST['selected_tables'] as $t) {
-                $t_safe = preg_replace('/[^a-zA-Z0-9_]/', '', $t);
-                if (!empty($t_safe)) $safe_tables[] = $t_safe;
-            }
-            if (count($safe_tables) > 0) {
-                $table_list = implode(", ", $safe_tables);
-                mysqli_query($conn, "OPTIMIZE TABLE $table_list");
-                $pesan_frag = "<div class='alert alert-success mt-3'><i class='fa-solid fa-check-circle me-2'></i>Tabel (".implode(", ", $safe_tables).") berhasil dioptimasi.</div>";
-            }
-        } else {
-            $pesan_frag = "<div class='alert alert-warning mt-3'><i class='fa-solid fa-triangle-exclamation me-2'></i>Pilih minimal satu tabel untuk dioptimasi.</div>";
-        }
-    }
-}
-
-$db_name = "db_gudang";
-$query_frag = "
-    SELECT 
-        TABLE_NAME as table_name,
-        ENGINE as engine,
-        TABLE_ROWS as table_rows,
-        DATA_LENGTH as data_length,
-        INDEX_LENGTH as index_length,
-        DATA_FREE as data_free
-    FROM information_schema.TABLES
-    WHERE TABLE_SCHEMA = '$db_name'
-    ORDER BY DATA_FREE DESC
-";
-$tables_info = mysqli_query($conn, $query_frag);
+$frag_horizontal = mysqli_query($conn, "SELECT * FROM v_frag_transaksi_masuk ORDER BY tanggal DESC LIMIT 100");
+$frag_vertical = mysqli_query($conn, "SELECT * FROM v_frag_transaksi_detail ORDER BY id DESC LIMIT 100");
+$frag_campuran = mysqli_query($conn, "SELECT * FROM v_frag_transaksi_masuk_ringkas ORDER BY tanggal DESC LIMIT 100");
 
 if (!function_exists('formatBytes')) {
     function formatBytes($bytes, $precision = 2) {
@@ -161,11 +93,9 @@ if (!function_exists('formatBytes')) {
             <li class="nav-item" role="presentation">
                 <button class="nav-link" id="komparasi-tab" data-bs-toggle="pill" data-bs-target="#komparasi" type="button" role="tab" aria-controls="komparasi" aria-selected="false"><i class="fa-solid fa-layer-group me-2"></i> Set Operations (Data Komparasi)</button>
             </li>
-            <?php if ($_SESSION['role'] == 'Admin') : ?>
             <li class="nav-item" role="presentation">
-                <button class="nav-link" id="frag-tab" data-bs-toggle="pill" data-bs-target="#frag" type="button" role="tab" aria-controls="frag" aria-selected="false"><i class="fa-solid fa-server me-2"></i> Fragmentation</button>
+                <button class="nav-link" id="frag-tab" data-bs-toggle="pill" data-bs-target="#frag" type="button" role="tab" aria-controls="frag" aria-selected="false"><i class="fa-solid fa-table-columns me-2"></i> Data Fragmentation</button>
             </li>
-            <?php endif; ?>
         </ul>
 
         <div class="tab-content" id="logTabContent">
@@ -259,120 +189,61 @@ if (!function_exists('formatBytes')) {
             </div>
 
 
-            <?php if ($_SESSION['role'] == 'Admin') : ?>
             <div class="tab-pane fade" id="frag" role="tabpanel" aria-labelledby="frag-tab">
-                <div class="glass-card mb-4 p-4 border-start border-warning border-4">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h5 class="fw-bold mb-2"><i class="fa-solid fa-broom text-warning me-2"></i>Optimasi Performa Database</h5>
-                            <p class="text-muted small mb-0">Pilih kolom yang ingin ditampilkan dan baris tabel yang ingin dioptimasi.</p>
+                <ul class="nav nav-tabs fw-bold mb-4" id="fragSubTab" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active text-primary" id="horizontal-tab" data-bs-toggle="tab" data-bs-target="#horizontal" type="button" role="tab" aria-controls="horizontal" aria-selected="true"><i class="fa-solid fa-arrows-left-right me-2"></i> Horizontal</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link text-success" id="vertical-tab" data-bs-toggle="tab" data-bs-target="#vertical" type="button" role="tab" aria-controls="vertical" aria-selected="false"><i class="fa-solid fa-arrows-up-down me-2"></i> Vertikal</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link text-warning" id="campuran-tab" data-bs-toggle="tab" data-bs-target="#campuran" type="button" role="tab" aria-controls="campuran" aria-selected="false"><i class="fa-solid fa-maximize me-2"></i> Campuran</button>
+                    </li>
+                </ul>
+
+                <div class="tab-content" id="fragSubTabContent">
+                    <div class="tab-pane fade show active" id="horizontal" role="tabpanel" aria-labelledby="horizontal-tab">
+                        <div class="glass-card p-4">
+                            <h6 class="fw-bold mb-3 text-primary">Fragmentasi Horizontal (Transaksi Masuk Saja)</h6>
+                            <table class="table table-bordered table-hover">
+                                <thead class="table-light"><tr><th>ID</th><th>Barang ID</th><th>Jenis</th><th>Jumlah</th><th>Tujuan</th><th>Tanggal</th></tr></thead>
+                                <tbody>
+                                    <?php while($row = mysqli_fetch_assoc($frag_horizontal)) : ?>
+                                    <tr><td><?= $row['id']; ?></td><td><?= $row['barang_id']; ?></td><td><?= $row['jenis_transaksi']; ?></td><td><?= $row['jumlah']; ?></td><td><?= $row['cabang_tujuan_id']; ?></td><td><?= $row['tanggal']; ?></td></tr>
+                                    <?php endwhile; ?>
+                                </tbody>
+                            </table>
                         </div>
-                        <div>
-                            <form method="POST" onsubmit="return confirm('Optimasi seluruh tabel akan memakan waktu dan memberikan lock pada tabel selama proses. Lanjutkan?');" class="d-inline">
-                                <button type="submit" name="optimize_all" class="btn btn-warning fw-bold"><i class="fa-solid fa-bolt me-2"></i>Optimize Semua</button>
-                            </form>
+                    </div>
+                    <div class="tab-pane fade" id="vertical" role="tabpanel" aria-labelledby="vertical-tab">
+                        <div class="glass-card p-4">
+                            <h6 class="fw-bold mb-3 text-success">Fragmentasi Vertikal (Detail Transaksi)</h6>
+                            <table class="table table-bordered table-hover">
+                                <thead class="table-light"><tr><th>ID</th><th>Barang ID</th><th>Jumlah</th></tr></thead>
+                                <tbody>
+                                    <?php while($row = mysqli_fetch_assoc($frag_vertical)) : ?>
+                                    <tr><td><?= $row['id']; ?></td><td><?= $row['barang_id']; ?></td><td><?= $row['jumlah']; ?></td></tr>
+                                    <?php endwhile; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="tab-pane fade" id="campuran" role="tabpanel" aria-labelledby="campuran-tab">
+                        <div class="glass-card p-4">
+                            <h6 class="fw-bold mb-3 text-warning">Fragmentasi Campuran (Ringkasan Transaksi Masuk)</h6>
+                            <table class="table table-bordered table-hover">
+                                <thead class="table-light"><tr><th>ID</th><th>Barang ID</th><th>Jumlah</th><th>Tanggal</th></tr></thead>
+                                <tbody>
+                                    <?php while($row = mysqli_fetch_assoc($frag_campuran)) : ?>
+                                    <tr><td><?= $row['id']; ?></td><td><?= $row['barang_id']; ?></td><td><?= $row['jumlah']; ?></td><td><?= $row['tanggal']; ?></td></tr>
+                                    <?php endwhile; ?>
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </div>
-
-                <?= $pesan_frag; ?>
-
-                <div class="glass-card mb-3 p-3">
-                    <h6 class="fw-bold mb-2 small text-muted">Tampilkan/Sembunyikan Kolom:</h6>
-                    <div class="d-flex flex-wrap gap-3">
-                        <div class="form-check form-switch">
-                            <input class="form-check-input col-toggle" type="checkbox" id="colEngine" data-col="2" checked>
-                            <label class="form-check-label small" for="colEngine">Engine</label>
-                        </div>
-                        <div class="form-check form-switch">
-                            <input class="form-check-input col-toggle" type="checkbox" id="colRows" data-col="3" checked>
-                            <label class="form-check-label small" for="colRows">Jumlah Baris</label>
-                        </div>
-                        <div class="form-check form-switch">
-                            <input class="form-check-input col-toggle" type="checkbox" id="colData" data-col="4" checked>
-                            <label class="form-check-label small" for="colData">Data Size</label>
-                        </div>
-                        <div class="form-check form-switch">
-                            <input class="form-check-input col-toggle" type="checkbox" id="colIndex" data-col="5" checked>
-                            <label class="form-check-label small" for="colIndex">Index Size</label>
-                        </div>
-                        <div class="form-check form-switch">
-                            <input class="form-check-input col-toggle" type="checkbox" id="colFrag" data-col="6" checked>
-                            <label class="form-check-label small" for="colFrag">Fragmentasi</label>
-                        </div>
-                    </div>
-                </div>
-
-                <form method="POST" id="formOptimizeSelected">
-                    <div class="mb-3">
-                        <button type="submit" name="optimize_selected" class="btn btn-sm btn-primary fw-bold" onclick="return confirm('Optimasi tabel terpilih?');"><i class="fa-solid fa-check-double me-2"></i>Optimize Terpilih</button>
-                    </div>
-                    <div class="glass-card p-0 overflow-auto">
-                        <table class="table table-hover mb-0 align-middle" id="fragTable">
-                            <thead class="table-light">
-                                <tr>
-                                    <th class="ps-4" style="width: 40px;">
-                                        <div class="form-check">
-                                            <input class="form-check-input" type="checkbox" id="selectAllRows">
-                                        </div>
-                                    </th>
-                                    <th>Nama Tabel</th>
-                                    <th class="text-center col-engine">Engine</th>
-                                    <th class="text-end col-rows">Jumlah Baris</th>
-                                    <th class="text-end col-data">Data Size</th>
-                                    <th class="text-end col-index">Index Size</th>
-                                    <th class="text-end text-danger fw-bold col-frag">Fragmentasi</th>
-                                    <th class="text-center pe-4">Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php 
-                                $total_fragmented = 0;
-                                while($row = mysqli_fetch_assoc($tables_info)) : 
-                                    $total_fragmented += $row['data_free'];
-                                    $is_fragmented = $row['data_free'] > 0;
-                                ?>
-                                <tr>
-                                    <td class="ps-4">
-                                        <div class="form-check">
-                                            <input class="form-check-input row-checkbox" type="checkbox" name="selected_tables[]" value="<?= $row['table_name']; ?>">
-                                        </div>
-                                    </td>
-                                    <td class="fw-medium"><i class="fa-solid fa-table border rounded p-1 text-secondary me-2"></i><?= $row['table_name']; ?></td>
-                                    <td class="text-center col-engine"><span class="badge bg-light text-dark border"><?= $row['engine']; ?></span></td>
-                                    <td class="text-end col-rows"><?= number_format($row['table_rows']); ?></td>
-                                    <td class="text-end col-data"><?= formatBytes($row['data_length']); ?></td>
-                                    <td class="text-end col-index"><?= formatBytes($row['index_length']); ?></td>
-                                    <td class="text-end col-frag <?= $is_fragmented ? 'text-danger fw-bold' : 'text-success'; ?>">
-                                        <?= $is_fragmented ? formatBytes($row['data_free']) : '0 B (Optimal)'; ?>
-                                    </td>
-                                    <td class="text-center pe-4">
-                                        <button type="submit" formaction="?action=single" name="optimize_table" value="<?= $row['table_name']; ?>" class="btn btn-sm <?= $is_fragmented ? 'btn-primary' : 'btn-outline-secondary'; ?>" <?= !$is_fragmented ? 'disabled title="Sudah optimal"' : ''; ?> onclick="document.getElementById('singleTableInput').value='<?= $row['table_name']; ?>'; document.getElementById('singleTableForm').submit(); return false;">
-                                            <i class="fa-solid fa-hammer me-1"></i> Optimize
-                                        </button>
-                                    </td>
-                                </tr>
-                                <?php endwhile; ?>
-                            </tbody>
-                            <?php if ($total_fragmented > 0): ?>
-                            <tfoot class="table-warning">
-                                <tr>
-                                    <th colspan="6" class="text-end" id="fragFooterLabel">Total Ruang Terbuang (Fragmented):</th>
-                                    <th class="text-end text-danger fw-bold col-frag"><?= formatBytes($total_fragmented); ?></th>
-                                    <th></th>
-                                </tr>
-                            </tfoot>
-                            <?php endif; ?>
-                        </table>
-                    </div>
-                </form>
-                
-                <form method="POST" id="singleTableForm" style="display:none;">
-                    <input type="hidden" name="table_name" id="singleTableInput">
-                    <input type="hidden" name="optimize_table" value="1">
-                </form>
             </div>
-            <?php endif; ?>
 
         </div>
 
