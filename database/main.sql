@@ -277,3 +277,5 @@ INSERT INTO `users` (`id`, `username`, `password`, `role`) VALUES
 (3, 'petugas_bdg', '123', 'Petugas'),
 (4, 'petugas_sby', '123', 'Petugas'),
 (5, 'petugas_mdn', '123', 'Petugas');
+
+source routines.sql;
